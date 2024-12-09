@@ -13,3 +13,11 @@ Activate the virtual environment:
 
 Install all necessary packages:
 `pip install -r requirements.txt`
+
+### Developer Setup
+If you want to make changes to the code, you need some additional packages.
+Run:
+`pip install -r requirements-dev.txt`
+
+Then install the pre-commit hooks:
+`pre-commit install`
