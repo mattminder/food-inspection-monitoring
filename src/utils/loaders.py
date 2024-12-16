@@ -46,9 +46,15 @@ def read_complete_food_inspections():
     return inspections[inspections[Inspection.id_dossier].isin(complete_inspection_ids)]
 
 
-def read_food_activity():
+def read_active_relevant_food_activity():
+    """Reads and filters the activity file.
+
+    Only activities that are food-related, currently active and with a base frequency > 0 are
+    retained.
+    """
     activity = pd.read_excel(str(ACTIVITY_PATH))
 
     is_food_activity = activity[Activity.activity_domain] == ActivityDomain.FOOD
     is_active = activity[Activity.status] == ActivityStatus.ACTIVE
-    return activity[is_food_activity & is_active]
+    is_relevant = activity[Activity.base_frequency] > 0
+    return activity[is_food_activity & is_active & is_relevant]
