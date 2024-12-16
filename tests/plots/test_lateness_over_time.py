@@ -9,13 +9,32 @@ from src.schema.activity import Activity
 from src.plots.lateness_over_time import (
     _calculate_percentage_late_single_canton,
     _calculate_number_invalid,
+    _get_next_inspection,
     _EngineeredColumns,
 )
 
 
 class TestLatenessOverTime(unittest.TestCase):
-    def test__calculate_number_invalid_single_canton(self):
+    def test__get_next_inspection(self):
+        df = pd.DataFrame(
+            [
+                ("2021-01-01", 2),
+                ("2021-01-31", 1),
+                ("2020-02-29", 3),  # map leap year to non-leap-year
+                ("2020-02-29", 4),  # map leap year to leap year
+                ("NaT", 2),  # map NaT to NaT
+            ],
+            columns=[Inspection.date, Activity.base_frequency],
+        )
+        df[Inspection.date] = pd.to_datetime(df[Inspection.date])
 
+        expected = pd.to_datetime(
+            pd.Series(["2023-01-01", "2022-01-31", "2023-03-01", "2024-02-29", "NaT"])
+        )
+        result = _get_next_inspection(df)
+        pd.testing.assert_series_equal(expected, result)
+
+    def test__calculate_number_invalid_single_canton(self):
         single_canton = pd.DataFrame(
             [
                 # uid1 is late in February 2023
