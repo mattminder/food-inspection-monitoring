@@ -15,5 +15,5 @@ class Inspection:
     activity_uid = Activity.activity_uid
 
 
-class InspectionDossierType(enum.Enum):
+class InspectionDossierType(enum.StrEnum):
     SAMPLING_EXTRACTION = "Pbnahme"

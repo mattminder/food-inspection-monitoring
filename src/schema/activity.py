@@ -16,9 +16,9 @@ class Activity:
     activity_uid = "UID"
 
 
-class ActivityDomain(enum.Enum):
+class ActivityDomain(enum.StrEnum):
     FOOD = "Denrées alimentaires/Objets usuels"
 
 
-class ActivityStatus(enum.Enum):
+class ActivityStatus(enum.StrEnum):
     ACTIVE = "Aktiv"
