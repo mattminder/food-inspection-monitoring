@@ -1,8 +1,10 @@
 import functools
 import pandas as pd
+from matplotlib import pyplot as plt
 
 from src.schema.inspection import Inspection
 from src.schema.activity import Activity
+from src.plots.plot_paths import LATENESS_OVER_TIME
 
 
 class _EngineeredColumns:
@@ -40,6 +42,32 @@ def _get_start_end_date(merged):
     return (merged[Inspection.date].min(), merged[Inspection.date].max())
 
 
+def _get_next_inspection(df):
+    def inner(x):
+        last_date = x[Inspection.date]
+        frequency = x[Activity.base_frequency]
+
+        if last_date is pd.NaT:
+            return pd.NaT
+
+        # map Februaury 29th in leap year to March 1st
+        if last_date.month == 2 and last_date.day == 29 and frequency % 4 != 0:
+            return pd.Timestamp(
+                year=last_date.year + int(frequency),
+                month=3,
+                day=1,
+            )
+
+        # keep the same date, but shift the year
+        return pd.Timestamp(
+            year=last_date.year + int(frequency),
+            month=last_date.month,
+            day=last_date.day,
+        )
+
+    return df.apply(inner, axis=1)
+
+
 def _calculate_number_invalid(merged):
     start_date, end_date = _get_start_end_date(merged)
 
@@ -53,16 +81,26 @@ def _calculate_number_invalid(merged):
     )
 
 
-def _merge_inspection_and_activities(inspections, food_activities):
-    # TODO: Make sure inspections are complete
-    # TODO: Make sure that activities have base frequency > 0 and that they are active
-
-    _merged = inspections.merge(
+def _merge_inspection_and_activities(complete_inspections, food_activities):
+    return complete_inspections.merge(
         food_activities.drop(
             ["ID_Entreprise", "Canton", "Domaine_Activite", "Insp_Contr"], axis=1
         ),
         left_on=Inspection.activity_uid,
         right_on=Activity.activity_uid,
-        how="left",
+        how="inner",
     )
-    # TODO: Change this to inner?
+
+
+def _plot(number_invalid, output_dir):
+    (number_invalid * 100).T.plot(figsize=(12, 4))
+    plt.xlabel("Year")
+    plt.ylabel("Percentage Late")
+    plt.savefig(output_dir / LATENESS_OVER_TIME)
+
+
+def plot_lateness_over_time(complete_inspections, food_activities, output_dir):
+    merged = _merge_inspection_and_activities(complete_inspections, food_activities)
+    merged[_EngineeredColumns.next_inspection_due_date] = _get_next_inspection(merged)
+    number_invalid = _calculate_number_invalid(merged)
+    _plot(number_invalid, output_dir)
