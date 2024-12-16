@@ -81,11 +81,10 @@ def _calculate_number_invalid(merged):
     )
 
 
-def _merge_inspection_and_activities(complete_inspections, food_activities):
+def _join_base_frequency(complete_inspections, food_activities):
+    """Joins the base frequency to the inspections."""
     return complete_inspections.merge(
-        food_activities.drop(
-            ["ID_Entreprise", "Canton", "Domaine_Activite", "Insp_Contr"], axis=1
-        ),
+        food_activities[[Activity.activity_uid, Activity.base_frequency]],
         left_on=Inspection.activity_uid,
         right_on=Activity.activity_uid,
         how="inner",
@@ -100,7 +99,14 @@ def _plot(number_invalid, output_dir):
 
 
 def plot_lateness_over_time(complete_inspections, food_activities, output_dir):
-    merged = _merge_inspection_and_activities(complete_inspections, food_activities)
-    merged[_EngineeredColumns.next_inspection_due_date] = _get_next_inspection(merged)
-    number_invalid = _calculate_number_invalid(merged)
+    """Creates a plot of the number of late inspections over time."""
+    with_base_frequency = _join_base_frequency(complete_inspections, food_activities)
+
+    # Engineer a new column for the next inspection due date
+    with_base_frequency[
+        _EngineeredColumns.next_inspection_due_date
+    ] = _get_next_inspection(with_base_frequency)
+
+    # Calculate and plot the number of invalid entries
+    number_invalid = _calculate_number_invalid(with_base_frequency)
     _plot(number_invalid, output_dir)
