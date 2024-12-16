@@ -5,8 +5,8 @@ from src.schema.inspection import (
     INSPECTION_PATH,
     Inspection,
     InspectionDossierType,
-    InspectionActivityDomain,
 )
+from src.schema.activity import ACTIVITY_PATH, ActivityDomain, Activity, ActivityStatus
 
 
 def read_food_inspections():
@@ -18,7 +18,7 @@ def read_food_inspections():
             inspections[Inspection.type_dossier]
             != InspectionDossierType.SAMPLING_EXTRACTION
         )
-        & (inspections[Inspection.activity_domain] == InspectionActivityDomain.FOOD)
+        & (inspections[Inspection.activity_domain] == ActivityDomain.FOOD)
     ].copy()
 
     # parse date
@@ -44,3 +44,11 @@ def read_complete_food_inspections():
 
     # return entries with a complete inspection
     return inspections[inspections[Inspection.id_dossier].isin(complete_inspection_ids)]
+
+
+def read_food_activity():
+    activity = pd.read_excel(str(ACTIVITY_PATH))
+
+    is_food_activity = activity[Activity.activity_domain] == ActivityDomain.FOOD
+    is_active = activity[Activity.status] == ActivityStatus.ACTIVE
+    return activity[is_food_activity & is_active]
