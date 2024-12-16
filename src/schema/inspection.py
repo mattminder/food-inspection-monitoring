@@ -12,6 +12,7 @@ class Inspection:
     type_dossier = "Type_Dossier"
     activity_domain = Activity.activity_domain
     date = "Date_Inspection"
+    activity_uid = Activity.activity_uid
 
 
 class InspectionDossierType(enum.Enum):

@@ -13,6 +13,7 @@ class Activity:
     canton = "Canton"
     last_risk_factor = "Last_INSP_Facteur"
     status = "Statut_Categorie"
+    activity_uid = "UID"
 
 
 class ActivityDomain(enum.Enum):
